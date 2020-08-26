@@ -182,7 +182,7 @@ impl event::EventHandler for MainState {
         graphics::draw(ctx, &ball_mesh, draw_param)?;
 
         let score_text = graphics::Text::new(format!(
-            "{}         {}",
+            "{}       {}",
             self.player_1_score, self.player_2_score
         ));
         let screen_w = graphics::drawable_size(ctx).0;
@@ -201,9 +201,9 @@ impl event::EventHandler for MainState {
 }
 
 fn main() -> GameResult {
-    let cb = ggez::ContextBuilder::new("pong", "TanTan");
+    let cb = ggez::ContextBuilder::new("pong", "jasonleonhard");
     let (mut ctx, mut event_loop) = cb.build()?;
-    graphics::set_window_title(&ctx, "Rusty Pong");
+    graphics::set_window_title(&ctx, "Pong");
     let mut state = MainState::new(&mut ctx);
     event::run(&mut ctx, &mut event_loop, &mut state)
 }
