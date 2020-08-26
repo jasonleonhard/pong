@@ -8,6 +8,7 @@ use rand::{self, thread_rng, Rng};
 
 const PLAYER_SPEED: f32 = 600.0;
 
+const PADDING: f32 = 40.0;
 const RACKET_HEIGHT: f32 = 100.0;
 const RACKET_WIDTH: f32 = 20.0;
 const RACKET_HEIGHT_HALF: f32 = RACKET_HEIGHT * 0.5;
@@ -70,8 +71,8 @@ impl MainState {
         randomize_vec(&mut ball_vel, BALL_SPEED, BALL_SPEED);
 
         MainState {
-            player_1_pos: na::Point2::new(RACKET_WIDTH_HALF, screen_h_half),
-            player_2_pos: na::Point2::new(_screen_w - RACKET_WIDTH_HALF, screen_h_half),
+            player_1_pos: na::Point2::new(RACKET_WIDTH_HALF + PADDING, screen_h_half),
+            player_2_pos: na::Point2::new(_screen_w - RACKET_WIDTH_HALF - PADDING, screen_h_half),
             ball_pos: na::Point2::new(_screen_w_half, screen_h_half),
             ball_vel: na::Vector2::new(BALL_SPEED, BALL_SPEED),
             player_1_score: 0,
@@ -115,6 +116,15 @@ impl event::EventHandler for MainState {
             self.ball_pos.y = _screen_h - BALL_SIZE_HALF;
             self.ball_vel.y = -self.ball_vel.y.abs();
         }
+        let intersects_player_1 = self.ball_pos.x - BALL_SIZE_HALF
+            < self.player_1_pos.x + RACKET_WIDTH_HALF
+            && self.ball_pos.x + BALL_SIZE_HALF > self.player_1_pos.x - RACKET_WIDTH_HALF
+            && self.ball_pos.y + BALL_SIZE_HALF < self.player_1_pos.y + RACKET_HEIGHT_HALF
+            && self.ball_pos.y + BALL_SIZE_HALF > self.player_1_pos.y + RACKET_HEIGHT_HALF;
+        if intersects_player_1 {
+            self.ball_vel.x = self.ball_vel.x.abs();
+        }
+
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
