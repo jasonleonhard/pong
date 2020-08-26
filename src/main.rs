@@ -5,8 +5,10 @@ use ggez::input::keyboard::{self, KeyCode};
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 
+const BALL_SPEED: f32 = 100.0;
+const BALL_DIRECTION: f32 = 5.0;
+
 const PLAYER_SPEED: f32 = 600.0;
-// const BALL_SPEED: f32 = 600.0;
 const RACKET_HEIGHT: f32 = 100.0;
 const RACKET_WIDTH: f32 = 20.0;
 const RACKET_HEIGHT_HALF: f32 = RACKET_HEIGHT * 0.5;
@@ -41,6 +43,7 @@ struct MainState {
     player_1_pos: na::Point2<f32>,
     player_2_pos: na::Point2<f32>,
     ball_pos: na::Point2<f32>,
+    ball_vel: na::Vector2<f32>,
 }
 
 impl MainState {
@@ -51,6 +54,7 @@ impl MainState {
             player_1_pos: na::Point2::new(RACKET_WIDTH_HALF, screen_h_half),
             player_2_pos: na::Point2::new(screen_w - RACKET_WIDTH_HALF, screen_h_half),
             ball_pos: na::Point2::new(screen_w_half, screen_h_half),
+            ball_vel: na::Vector2::new(BALL_SPEED, BALL_DIRECTION),
         }
     }
 }
@@ -64,7 +68,7 @@ impl event::EventHandler for MainState {
         move_racket(&mut self.player_1_pos, KeyCode::S, 1.0, ctx);
         move_racket(&mut self.player_2_pos, KeyCode::Up, -1.0, ctx);
         move_racket(&mut self.player_2_pos, KeyCode::Down, 1.0, ctx);
-
+        self.ball_pos += self.ball_vel * _dt;
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
