@@ -14,6 +14,29 @@ const RACKET_WIDTH_HALF: f32 = RACKET_WIDTH * 0.5;
 const BALL_SIZE: f32 = 30.0;
 const BALL_SIZE_HALF: f32 = BALL_SIZE * 0.5;
 
+fn clamp(value: &mut f32, low: f32, high: f32) {
+    if *value < low {
+        *value = low;
+    } else if *value > high {
+        *value = high;
+    }
+}
+
+fn move_racket(pos: &mut na::Point2<f32>, keycode: KeyCode, y_dir: f32, ctx: &mut Context) {
+    let dt = ggez::timer::delta(ctx).as_secs_f32();
+    let screen_h = graphics::drawable_size(ctx).1;
+
+    if keyboard::is_key_pressed(ctx, keycode) {
+        pos.y -= y_dir * PLAYER_SPEED * dt;
+    }
+
+    clamp(
+        &mut pos.y,
+        RACKET_HEIGHT_HALF,
+        screen_h - RACKET_HEIGHT_HALF,
+    );
+}
+
 struct MainState {
     player_1_pos: na::Point2<f32>,
     player_2_pos: na::Point2<f32>,
@@ -35,44 +58,12 @@ impl MainState {
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         let dt = ggez::timer::delta(ctx).as_secs_f32();
-        // player1
-        // W = down
-        // Q = up
-        if keyboard::is_key_pressed(ctx, KeyCode::W) {
-            self.player_1_pos.y -= PLAYER_SPEED * dt;
-        }
-        if keyboard::is_key_pressed(ctx, KeyCode::Q) {
-            self.player_1_pos.y += PLAYER_SPEED * dt;
-        }
+        let screen_h = graphics::drawable_size(ctx).1;
 
-        // player2
-        // A = down
-        // S = up
-        if keyboard::is_key_pressed(ctx, KeyCode::A) {
-            self.player_2_pos.y -= PLAYER_SPEED * dt;
-        }
-        if keyboard::is_key_pressed(ctx, KeyCode::S) {
-            self.player_2_pos.y += PLAYER_SPEED * dt;
-        }
-
-        // ball
-        // O = down
-        // P = up
-        if keyboard::is_key_pressed(ctx, KeyCode::O) {
-            self.ball_pos.y -= BALL_SPEED * dt;
-        }
-        if keyboard::is_key_pressed(ctx, KeyCode::P) {
-            self.ball_pos.y += BALL_SPEED * dt;
-        }
-        // ball
-        // K = down
-        // L = up
-        if keyboard::is_key_pressed(ctx, KeyCode::K) {
-            self.ball_pos.x -= BALL_SPEED * dt;
-        }
-        if keyboard::is_key_pressed(ctx, KeyCode::L) {
-            self.ball_pos.x += BALL_SPEED * dt;
-        }
+        move_racket(&mut self.player_1_pos, KeyCode::W, -1.0, ctx);
+        move_racket(&mut self.player_1_pos, KeyCode::S, 1.0, ctx);
+        move_racket(&mut self.player_2_pos, KeyCode::Up, -1.0, ctx);
+        move_racket(&mut self.player_2_pos, KeyCode::Down, 1.0, ctx);
 
         Ok(())
     }
