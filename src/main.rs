@@ -1,9 +1,8 @@
-use ggez;
-use ggez::event;
-use ggez::graphics;
-use ggez::input::keyboard::{self, KeyCode};
-use ggez::nalgebra as na;
-use ggez::{Context, GameResult};
+use ggez::{
+    event, graphics,
+    input::keyboard::{self, KeyCode},
+    nalgebra as na, Context, GameResult,
+};
 use rand::{self, thread_rng, Rng};
 
 const BALL_SIZE_HALF: f32 = BALL_SIZE * 0.5;
