@@ -1,6 +1,6 @@
-# Pong
+# The game of Pong implemented in Rust lang
 
-# run locally
+### Run locally
 
 clone this repo then run
 
