@@ -107,6 +107,14 @@ impl event::EventHandler for MainState {
             self.player_1_score += 1;
         }
 
+        // if ball goes off the top or bottom of the screen
+        if self.ball_pos.y < BALL_SIZE_HALF {
+            self.ball_pos.y = BALL_SIZE_HALF;
+            self.ball_vel = self.ball_vel.abs();
+        } else if self.ball_pos.y > _screen_h - BALL_SIZE_HALF {
+            self.ball_pos.y = _screen_h - BALL_SIZE_HALF;
+            self.ball_vel.y = -self.ball_vel.y.abs();
+        }
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
@@ -149,11 +157,9 @@ impl event::EventHandler for MainState {
             "{}             {}",
             self.player_1_score, self.player_2_score
         ));
-        // let (screen_w, screen_h) = graphics::drawable_size();
         let screen_w = graphics::drawable_size(ctx).0;
         let _screen_w_half = screen_w * 0.5;
 
-        // let score_pos = na::Point2::new(_screen_w_half, 40.0);
         let score_pos = na::Point2::new(380.0, 40.0);
         draw_param.dest = score_pos.into();
 
