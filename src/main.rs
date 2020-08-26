@@ -6,17 +6,18 @@ use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 use rand::{self, thread_rng, Rng};
 
-const PLAYER_SPEED: f32 = 600.0;
-
-const PADDING: f32 = 40.0;
-const RACKET_HEIGHT: f32 = 100.0;
-const RACKET_WIDTH: f32 = 20.0;
-const RACKET_HEIGHT_HALF: f32 = RACKET_HEIGHT * 0.5;
-const RACKET_WIDTH_HALF: f32 = RACKET_WIDTH * 0.5;
-
-const BALL_SIZE: f32 = 30.0;
 const BALL_SIZE_HALF: f32 = BALL_SIZE * 0.5;
-const BALL_SPEED: f32 = 100.0;
+const BALL_SIZE: f32 = 30.0;
+const BALL_SPEED: f32 = 300.0;
+const HALF: f32 = 0.5;
+const MIDDLE_LINE_W: f32 = 2.0;
+const PADDING: f32 = 40.0;
+const PLAYER_SPEED: f32 = 600.0;
+const RACKET_HEIGHT_HALF: f32 = RACKET_HEIGHT * 0.5;
+const RACKET_HEIGHT: f32 = 100.0;
+const RACKET_WIDTH_HALF: f32 = RACKET_WIDTH * 0.5;
+const RACKET_WIDTH: f32 = 20.0;
+const ZERO: f32 = 0.0;
 
 fn clamp(value: &mut f32, low: f32, high: f32) {
     if *value < low {
@@ -27,28 +28,25 @@ fn clamp(value: &mut f32, low: f32, high: f32) {
 }
 
 fn move_racket(pos: &mut na::Point2<f32>, keycode: KeyCode, y_dir: f32, ctx: &mut Context) {
-    let _dt = ggez::timer::delta(ctx).as_secs_f32();
-    let _screen_h = graphics::drawable_size(ctx).1;
-
+    let dt = ggez::timer::delta(ctx).as_secs_f32();
+    let screen_h = graphics::drawable_size(ctx).1;
     if keyboard::is_key_pressed(ctx, keycode) {
-        pos.y -= y_dir * PLAYER_SPEED * _dt;
+        pos.y += y_dir * PLAYER_SPEED * dt;
     }
-
     clamp(
         &mut pos.y,
         RACKET_HEIGHT_HALF,
-        _screen_h - RACKET_HEIGHT_HALF,
+        screen_h - RACKET_HEIGHT_HALF,
     );
 }
 
-// spawn ball with random velocity, 50/50
 fn randomize_vec(vec: &mut na::Vector2<f32>, x: f32, y: f32) {
     let mut rng = thread_rng();
-    vec.x = match rng.gen_bool(0.5) {
+    vec.x = match rng.gen_bool(HALF.into()) {
         true => x,
         false => -x,
     };
-    vec.y = match rng.gen_bool(0.5) {
+    vec.y = match rng.gen_bool(HALF.into()) {
         true => y,
         false => -y,
     };
@@ -65,16 +63,17 @@ struct MainState {
 
 impl MainState {
     pub fn new(ctx: &mut Context) -> Self {
-        let (_screen_w, _screen_h) = graphics::drawable_size(ctx);
-        let (_screen_w_half, screen_h_half) = (_screen_w * 0.5, _screen_h * 0.5);
-        let mut ball_vel = na::Vector2::new(0.0, 0.0);
+        let (screen_w, screen_h) = graphics::drawable_size(ctx);
+        let (screen_w_half, screen_h_half) = (screen_w * HALF, screen_h * HALF);
+
+        let mut ball_vel = na::Vector2::new(ZERO, ZERO);
         randomize_vec(&mut ball_vel, BALL_SPEED, BALL_SPEED);
 
         MainState {
             player_1_pos: na::Point2::new(RACKET_WIDTH_HALF + PADDING, screen_h_half),
-            player_2_pos: na::Point2::new(_screen_w - RACKET_WIDTH_HALF - PADDING, screen_h_half),
-            ball_pos: na::Point2::new(_screen_w_half, screen_h_half),
-            ball_vel: na::Vector2::new(BALL_SPEED, BALL_SPEED),
+            player_2_pos: na::Point2::new(screen_w - RACKET_WIDTH_HALF - PADDING, screen_h_half),
+            ball_pos: na::Point2::new(screen_w_half, screen_h_half),
+            ball_vel,
             player_1_score: 0,
             player_2_score: 0,
         }
@@ -83,50 +82,58 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        let _dt = ggez::timer::delta(ctx).as_secs_f32();
-        let (_screen_h, _screen_w) = graphics::drawable_size(ctx);
-
+        let dt = ggez::timer::delta(ctx).as_secs_f32();
+        let (screen_w, screen_h) = graphics::drawable_size(ctx);
         move_racket(&mut self.player_1_pos, KeyCode::W, -1.0, ctx);
         move_racket(&mut self.player_1_pos, KeyCode::S, 1.0, ctx);
         move_racket(&mut self.player_2_pos, KeyCode::Up, -1.0, ctx);
         move_racket(&mut self.player_2_pos, KeyCode::Down, 1.0, ctx);
 
-        self.ball_pos += self.ball_vel * _dt;
+        self.ball_pos += self.ball_vel * dt;
 
-        // if ball goes off screen
-        // ball back to center & randomize speed of ball
-        if self.ball_pos.x < 0.0 {
-            self.ball_pos.x = _screen_w * 0.5;
-            self.ball_pos.y = _screen_h * 0.5;
+        if self.ball_pos.x < ZERO {
+            self.ball_pos.x = screen_w * HALF;
+            self.ball_pos.y = screen_h * HALF;
             randomize_vec(&mut self.ball_vel, BALL_SPEED, BALL_SPEED);
             self.player_2_score += 1;
         }
-        if self.ball_pos.x > _screen_w {
-            self.ball_pos.x = _screen_w * 0.5;
-            self.ball_pos.y = _screen_h * 0.5;
+        if self.ball_pos.x > screen_w {
+            self.ball_pos.x = screen_w * HALF;
+            self.ball_pos.y = screen_h * HALF;
             randomize_vec(&mut self.ball_vel, BALL_SPEED, BALL_SPEED);
             self.player_1_score += 1;
         }
 
-        // if ball goes off the top or bottom of the screen
+        // ball, Y bounce
         if self.ball_pos.y < BALL_SIZE_HALF {
             self.ball_pos.y = BALL_SIZE_HALF;
-            self.ball_vel = self.ball_vel.abs();
-        } else if self.ball_pos.y > _screen_h - BALL_SIZE_HALF {
-            self.ball_pos.y = _screen_h - BALL_SIZE_HALF;
+            self.ball_vel.y = self.ball_vel.y.abs();
+        } else if self.ball_pos.y > screen_h - BALL_SIZE_HALF {
+            self.ball_pos.y = screen_h - BALL_SIZE_HALF;
             self.ball_vel.y = -self.ball_vel.y.abs();
         }
+
         let intersects_player_1 = self.ball_pos.x - BALL_SIZE_HALF
             < self.player_1_pos.x + RACKET_WIDTH_HALF
             && self.ball_pos.x + BALL_SIZE_HALF > self.player_1_pos.x - RACKET_WIDTH_HALF
-            && self.ball_pos.y + BALL_SIZE_HALF < self.player_1_pos.y + RACKET_HEIGHT_HALF
-            && self.ball_pos.y + BALL_SIZE_HALF > self.player_1_pos.y + RACKET_HEIGHT_HALF;
+            && self.ball_pos.y - BALL_SIZE_HALF < self.player_1_pos.y + RACKET_HEIGHT_HALF
+            && self.ball_pos.y + BALL_SIZE_HALF > self.player_1_pos.y - RACKET_HEIGHT_HALF;
+
         if intersects_player_1 {
             self.ball_vel.x = self.ball_vel.x.abs();
         }
+        let intersects_player_2 = self.ball_pos.x - BALL_SIZE_HALF
+            < self.player_2_pos.x + RACKET_WIDTH_HALF
+            && self.ball_pos.x + BALL_SIZE_HALF > self.player_2_pos.x - RACKET_WIDTH_HALF
+            && self.ball_pos.y - BALL_SIZE_HALF < self.player_2_pos.y + RACKET_HEIGHT_HALF
+            && self.ball_pos.y + BALL_SIZE_HALF > self.player_2_pos.y - RACKET_HEIGHT_HALF;
 
+        if intersects_player_2 {
+            self.ball_vel.x = -self.ball_vel.x.abs();
+        }
         Ok(())
     }
+
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::BLACK);
 
@@ -151,9 +158,21 @@ impl event::EventHandler for MainState {
             graphics::WHITE,
         )?;
 
+        let screen_h = graphics::drawable_size(ctx).1;
+        let middle_rect = graphics::Rect::new(-MIDDLE_LINE_W * HALF, ZERO, MIDDLE_LINE_W, screen_h);
+        let middle_mesh = graphics::Mesh::new_rectangle(
+            ctx,
+            graphics::DrawMode::fill(),
+            middle_rect,
+            graphics::WHITE,
+        )?;
+
         let mut draw_param = graphics::DrawParam::default();
 
-        // draw left, right players and ball first time
+        let screen_middle_x = graphics::drawable_size(ctx).0 * HALF;
+        draw_param.dest = [screen_middle_x, ZERO].into();
+        graphics::draw(ctx, &middle_mesh, draw_param)?;
+
         draw_param.dest = self.player_1_pos.into();
         graphics::draw(ctx, &racket_mesh, draw_param)?;
 
@@ -164,13 +183,15 @@ impl event::EventHandler for MainState {
         graphics::draw(ctx, &ball_mesh, draw_param)?;
 
         let score_text = graphics::Text::new(format!(
-            "{}             {}",
+            "{}         {}",
             self.player_1_score, self.player_2_score
         ));
         let screen_w = graphics::drawable_size(ctx).0;
-        let _screen_w_half = screen_w * 0.5;
+        let screen_w_half = screen_w * HALF;
 
-        let score_pos = na::Point2::new(380.0, 40.0);
+        let mut score_pos = na::Point2::new(screen_w_half, 40.0);
+        let (score_text_w, score_text_h) = score_text.dimensions(ctx);
+        score_pos -= na::Vector2::new(score_text_w as f32 * HALF, score_text_h as f32 * HALF);
         draw_param.dest = score_pos.into();
 
         graphics::draw(ctx, &score_text, draw_param)?;
@@ -181,11 +202,9 @@ impl event::EventHandler for MainState {
 }
 
 fn main() -> GameResult {
-    let cb = ggez::ContextBuilder::new("Snake_0", "TanTan");
-    let (ctx, event_loop) = &mut cb.build()?;
-    graphics::set_window_title(ctx, "SNAKE");
-
-    let mut state = MainState::new(ctx);
-    event::run(ctx, event_loop, &mut state)?;
-    Ok(())
+    let cb = ggez::ContextBuilder::new("pong", "TanTan");
+    let (mut ctx, mut event_loop) = cb.build()?;
+    graphics::set_window_title(&ctx, "Rusty Pong");
+    let mut state = MainState::new(&mut ctx);
+    event::run(&mut ctx, &mut event_loop, &mut state)
 }
