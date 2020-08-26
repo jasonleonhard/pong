@@ -6,7 +6,7 @@ use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 
 const PLAYER_SPEED: f32 = 600.0;
-const BALL_SPEED: f32 = 600.0;
+// const BALL_SPEED: f32 = 600.0;
 const RACKET_HEIGHT: f32 = 100.0;
 const RACKET_WIDTH: f32 = 20.0;
 const RACKET_HEIGHT_HALF: f32 = RACKET_HEIGHT * 0.5;
@@ -23,17 +23,17 @@ fn clamp(value: &mut f32, low: f32, high: f32) {
 }
 
 fn move_racket(pos: &mut na::Point2<f32>, keycode: KeyCode, y_dir: f32, ctx: &mut Context) {
-    let dt = ggez::timer::delta(ctx).as_secs_f32();
-    let screen_h = graphics::drawable_size(ctx).1;
+    let _dt = ggez::timer::delta(ctx).as_secs_f32();
+    let _screen_h = graphics::drawable_size(ctx).1;
 
     if keyboard::is_key_pressed(ctx, keycode) {
-        pos.y -= y_dir * PLAYER_SPEED * dt;
+        pos.y -= y_dir * PLAYER_SPEED * _dt;
     }
 
     clamp(
         &mut pos.y,
         RACKET_HEIGHT_HALF,
-        screen_h - RACKET_HEIGHT_HALF,
+        _screen_h - RACKET_HEIGHT_HALF,
     );
 }
 
@@ -45,8 +45,8 @@ struct MainState {
 
 impl MainState {
     pub fn new(ctx: &mut Context) -> Self {
-        let (screen_w, screen_h) = graphics::drawable_size(ctx);
-        let (screen_w_half, screen_h_half) = (screen_w * 0.5, screen_h * 0.5);
+        let (screen_w, _screen_h) = graphics::drawable_size(ctx);
+        let (screen_w_half, screen_h_half) = (screen_w * 0.5, _screen_h * 0.5);
         MainState {
             player_1_pos: na::Point2::new(RACKET_WIDTH_HALF, screen_h_half),
             player_2_pos: na::Point2::new(screen_w - RACKET_WIDTH_HALF, screen_h_half),
@@ -57,8 +57,8 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        let dt = ggez::timer::delta(ctx).as_secs_f32();
-        let screen_h = graphics::drawable_size(ctx).1;
+        let _dt = ggez::timer::delta(ctx).as_secs_f32();
+        let _screen_h = graphics::drawable_size(ctx).1;
 
         move_racket(&mut self.player_1_pos, KeyCode::W, -1.0, ctx);
         move_racket(&mut self.player_1_pos, KeyCode::S, 1.0, ctx);
@@ -93,7 +93,7 @@ impl event::EventHandler for MainState {
 
         let mut draw_param = graphics::DrawParam::default();
 
-        // draw left right players and ball first time
+        // draw left, right players and ball first time
         draw_param.dest = self.player_1_pos.into();
         graphics::draw(ctx, &racket_mesh, draw_param)?;
 
@@ -114,7 +114,6 @@ fn main() -> GameResult {
     graphics::set_window_title(ctx, "SNAKE");
 
     let mut state = MainState::new(ctx);
-    event::run(ctx, event_loop, &mut state);
-
+    event::run(ctx, event_loop, &mut state)?;
     Ok(())
 }
