@@ -83,10 +83,10 @@ impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         let dt = ggez::timer::delta(ctx).as_secs_f32();
         let (screen_w, screen_h) = graphics::drawable_size(ctx);
-        move_racket(&mut self.player_1_pos, KeyCode::W, -1.0, ctx);
-        move_racket(&mut self.player_1_pos, KeyCode::S, 1.0, ctx);
-        move_racket(&mut self.player_2_pos, KeyCode::Up, -1.0, ctx);
-        move_racket(&mut self.player_2_pos, KeyCode::Down, 1.0, ctx);
+        move_racket(&mut self.player_1_pos, KeyCode::D, -1.0, ctx);
+        move_racket(&mut self.player_1_pos, KeyCode::F, 1.0, ctx);
+        move_racket(&mut self.player_2_pos, KeyCode::J, -1.0, ctx);
+        move_racket(&mut self.player_2_pos, KeyCode::K, 1.0, ctx);
 
         self.ball_pos += self.ball_vel * dt;
 
